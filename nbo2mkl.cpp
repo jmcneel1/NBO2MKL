@@ -16,7 +16,93 @@ void WriteHeader ( ofstream & outFile )
   outFile << "#" << endl;
 }
 
+/*
+This procedure takes arguments to the function
+to define the charge and multiplicity that
+are written to the output file (the .mkl file)
+*/
 
+void WriteChargeMult ( ofstream & outFile, char* charge, char* mult )
+{
+  string scharge(charge);
+  string smult(mult);
+  outFile << "$CHAR_MULT" << endl;
+  outFile << "  "+scharge+" "+smult << endl;
+  outFile << "$END" << endl << endl;
+}
+
+/*
+This reads the .31 file for the coordinates
+It assumes that they are in Angstroems
+It then write them into the output file (.mkl)
+and saves the geometry to a vector
+*/
+
+void ReadWriteGeom ( char* base, ofstream & outFile,
+                     vector<Atom> & geom )
+{
+  string ifile(base);
+  ifile = ifile+".31";
+  ifstream inFile(ifile.c_str());
+  string line;
+  outFile << "$COORD" << endl;
+  // skip the first 5 lines, then read the first Atom
+  for ( unsigned int i = 0; i < 6; i++ ) { getline(inFile,line); }
+  while ( line.find("---") == string::npos )
+  {
+    unsigned int atnum;
+    float x, y, z;
+    stringstream ss;
+    ss << line;
+    ss >> atnum >> x >> y >> z;
+    Atom tatom(atnum,x,y,z);
+    geom.push_back(tatom);
+    outFile << setw(4) << atnum;
+    outFile << setw(12) << fixed << setprecision(6) << x;
+    outFile << setw(11) << fixed << setprecision(6) << y;
+    outFile << setw(11) << fixed << setprecision(6) << z << endl;
+    getline(inFile,line);
+  }
+  outFile << "$END" << endl << endl;
+  inFile.close();
+}
+
+/*
+The following section includes ReadWriteBasis
+And all the corresponding procedures used in the
+function
+*/
+
+/*
+This reads the basis set information from the .31
+file and stores it in the BasisSet object
+--- This assumes spherical basis sets (ORCA)
+*/
+
+void ReadBasis ( ifstream & inFile,
+                 const vector<Atom> & geom,
+                 BasisSet & basis )
+{
+
+}
+
+/*
+  The main function simply reads the .31 file
+  into a BasisSet object and then calls a function
+  to write it to the output file
+*/
+
+void ReadWriteBasis ( char* base, ofstream & outFile,
+                      const vector<Atom> & geom,
+                      BasisSet & basis )
+{
+  string ifile(base);
+  ifile = ifile+".31";
+  ifstream inFile(ifile.c_str());
+  ReadBasis(inFile,geom,basis);
+  WriteBasis(outFile,geom,basis);
+  inFile.close();
+}
 
 /*
 This is the main routine.
