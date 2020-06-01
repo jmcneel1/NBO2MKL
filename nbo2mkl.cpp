@@ -2,6 +2,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cmath>
+#include <algorithm>
 #include <cstdlib>
 
 using namespace std;
@@ -42,19 +43,20 @@ void ReadWriteGeom ( char* base, ofstream & outFile,
                      vector<Atom> & geom )
 {
   string ifile(base);
-  ifile = ifile+".31";
+  ifile = ifile+".47";
   ifstream inFile(ifile.c_str());
   string line;
   outFile << "$COORD" << endl;
-  // skip the first 5 lines, then read the first Atom
-  for ( unsigned int i = 0; i < 6; i++ ) { getline(inFile,line); }
+  // The GoTo mautil function, then read 2 more lines
+  GoTo(inFile,"$COORD");
+  getline(inFile,line); getline(inFile,line);
   while ( line.find("---") == string::npos )
   {
-    unsigned int atnum;
+    unsigned int atnum, wt;
     float x, y, z;
     stringstream ss;
     ss << line;
-    ss >> atnum >> x >> y >> z;
+    ss >> atnum >> wt >> x >> y >> z;
     Atom tatom(atnum,x,y,z);
     geom.push_back(tatom);
     outFile << setw(4) << atnum;
@@ -74,7 +76,210 @@ function
 */
 
 /*
-This reads the basis set information from the .31
+Here we read the number of basis functions from the NBAS entry
+in the $GENNBO keylist
+*/
+
+unsigned int ReadNBAS ( ifstream & inFile )
+{
+  string temp("");
+  while ( temp.find("NBAS") == string::npos )
+  {
+    inFile >> temp;
+  }
+  size_t pos = temp.find("=");
+  return atoi(temp.substr(pos+1));
+}
+
+/*
+Here we read the centers for the archive file... there should
+be nbasis centers to read
+*/
+
+void ReadCenters( ifstream & inFile, vector<unsigned int> & centers,
+                  unsigned int nbas)
+{
+  unsigned int center;
+  GoTo(inFile,"$BASIS");
+  string temp1, temp2;
+  // should be temp1 == "CENTER" temp2 == "="
+  inFile >> temp1 >> temp2;
+  for ( unsigned int i = 0; i < nbas; i++ )
+  {
+    inFile >> center;
+    centers.at(i) = center;
+  }
+}
+
+/*
+Now we read the basis set labels and also return the
+max angular momentum
+*/
+
+void ReadLabels ( ifstream & inFile, vector<unsigned int> & labels,
+                  unsigned int & maxlabel)
+{
+  unsigned int label;
+  maxlabel = 0; // Just in case...
+  string temp1, temp2;
+  // should be temp1 == "LABEL" temp2 == "="
+  inFile >> temp1 >> temp2;
+  for ( unsigned int i = 0; i < nbas; i++ )
+  {
+    inFile >> label;
+    if ( label/100 > maxlabel ) maxlabel = label/100;
+  }
+}
+
+/*
+This function assigns the correct shell to each BF
+Makes things easier later on...
+We make the following assumptions which is based on the
+way ORCA prints out it's MOs
+ - s shells begin/end with 1
+ - p shells begin with 103 and end with 102
+ - d shells begin with 255 and end with 251
+ - high shells go 1...N in sequential order
+*/
+
+void AssignShells ( vector<unsigned int> & shell,
+                    const vector<unsigned int> & labels )
+{
+  unsigned int currentshell(-1);
+  for ( unsigned int i = 0; i < labels.size(); i++ )
+  {
+    if ( label.at(i) == 1 || label.at(i) == 103 ||
+         label.at(i) == 255 || label.at(i) == 351 ||
+         label.at(i) == 451 || label.at(i) == 551 ) currentshell++;
+    shell.at(i) = currentshell;
+  }
+}
+
+/*
+Here we read the NSHELL variable from the archive
+*/
+
+void ReadNShell ( ifstream & inFile, unsigned int & nshell )
+{
+  GoTo(inFile,"$CONTRACT");
+  string t1, t2;
+  // This should be t1 == NSHELL, t2 == =
+  inFile >> t1 >> t2 >> nshell;
+}
+
+/*
+Here we read the NEXP variable from the archive
+*/
+
+void ReadNExp ( ifstream & inFile, unsigned int & nexp)
+{
+  string t1, t2;
+  //This should be t1 == NEXP, t2 == =
+  inFile >> t1 >> t2 >> nexp;
+}
+
+/*
+Here we read the number of primitives of the shells
+*/
+
+void ReadNPrim ( ifstream & inFile, vector<unsigned int> & nprim )
+{
+  // First we skip the NCOMP line
+  getline(inFile,line);
+  unsigned int temp;
+  string t1, t2;
+  inFile >> t1 >> t2;
+  for ( unsigned int i = 0; i < nprim.size(); i++ )
+  {
+    inFile >> temp;
+    nprim.at(i) = temp;
+  }
+}
+
+/*
+Here we read the ptr of the shell to the relevant
+primitive set
+*/
+
+void ReadPTR ( ifstream & inFile, vector<unsigned int> & ptr )
+{
+  unsigned int temp;
+  string t1, t2;
+  inFile >> t1 >> t2;
+  for ( unsigned int i = 0; i < ptr.size(); i++ )
+  {
+    inFile >> temp;
+    ptr.at(i) = temp;
+  }
+}
+
+/*
+Now we actually read the exponents
+*/
+
+void ReadExp ( ifstream & inFile,
+               vector<double> & exps, unsigned int nexp)
+{
+  GoTo(inFile,"NPTR");
+  string t1, t2;
+  double temp;
+  // Should be t1 == EXP, t2 == =
+  inFile >> t1 >> t2;
+  for ( unsigned int i = 0; i < nexp, i++ )
+  {
+    inFile >> temp;
+    exps.at(i) = temp;
+  }
+}
+
+/*
+This procedure will read the contraction coefficients for
+one of the angular momentum sets ... only stores the coefficient
+if it's nonzero. This is checked by comparing absolute values of
+the existing value with the read value
+*/
+void ReadShellCoeff ( ifstream & inFile,
+                      vector<double> & coeffs, unsigned int nexp)
+{
+  double temp;
+  string t1, t2;
+  // Should be t1 == CL, t2 == =
+  inFile >> t1 >> t2;
+  for ( unsigned int i = 0; i < nexp; i++ )
+  {
+    inFile >> temp;
+    if ( abs(coeffs.at(i)) < abs(temp) ) coeffs.at(i) = temp;
+  }
+}
+
+/*
+Here we actually organize all of our information and create
+the basis set object
+*/
+
+void SetBasisSetObject( BasisSet & basis, const vector<double> & exps,
+                        const vector<double> & coeffs,
+                        const vector<unsigned int> & centers,
+                        const vector<unsigned int> & labels,
+                        const vector<unsigned int> & shell,
+                        const vector<unsigned int> & ptr,
+                        const vector<unsigned int> & nprim )
+{
+  for ( unsigned int i = 0; i < labels.size(); i++ )
+  {
+    vector<double> texp(nprim.at(shell.at(i)));
+    vector<double> tcoeff(nprim.at(shell.at(i)));
+    for ( unsigned int j = 0; j < texp.size(); j++ )
+    {
+      texp.at(j) = exps.at(ptr.at(shell.at(i))-1+j);
+      tcoeff.at(j) = coeffs.at(ptr.at(shell.at(i))-1+j);
+    }
+    basis.AddBF(labels.at(i),centers.at(i),texp,tcoeff);
+  }
+}
+
+/*
+This reads the basis set information from the .47
 file and stores it in the BasisSet object
 --- This assumes spherical basis sets (ORCA)
 */
@@ -83,11 +288,105 @@ void ReadBasis ( ifstream & inFile,
                  const vector<Atom> & geom,
                  BasisSet & basis )
 {
-
+  // We assume here that NBAS is present in the archive
+  // This is required by GENNBO unless REUSE=T, so
+  // we assume that REUSE=F here ...
+  unsigned int nbas = ReadNBAS(inFile);
+  vector<unsigned int> centers(nbas); // length of nbasis
+  ReadCenters(inFile,centers,nbas);
+  unsigned int maxL; // Stores the highest L
+  vector<unsigned int> labels(nbas); // length of nbasis
+  ReadLabels(inFile,labels,maxlabel);
+  vector<unsigned int> shell(nbas);
+  AssignShells(shell,labels);
+  unsigned int nshell, nexp;
+  ReadNShell(inFile,nshell);
+  ReadNExp(inFile,nexp);
+  vector<unsigned int> nprim(nshell);
+  ReadNPrim(inFile,nprim);
+  vector<unsigned int> ptr(nshell);
+  ReadPTR(inFile,ptr);
+  vector<double> exps(nexp,0);
+  ReadExp(inFile,exps,nexp);
+  vector<double> coeffs(nexp,0);
+  for ( unsigned int i = 0; i <= maxL; i++ )
+  {
+    ReadShellCoeff(inFile,coeffs,nexp);
+  }
+  SetBasisSetObject(basis,exps,coeffs,centers,labels,shell,nprim);
 }
 
 /*
-  The main function simply reads the .31 file
+Now we write the basis to the .mkl file
+We only write based on the label == 1, 103, 255, 351, 451, 551
+*/
+
+void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
+                  const BasisSet & basis )
+{
+  outFile << "$BASIS" << endl;
+  for ( unsigned int i = 0; i < basis.GetNBasis(); i++ )
+  {
+    if ( basis.GetLabel(i) == 1 )
+    {
+      outFile << " 1 S 1.0" << endl;
+      for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
+      {
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionS(basis.GetPtr(basis.GetShell(i))) << endl;
+      }
+    }
+    else if ( basis.GetLabel(i) == 103 )
+    {
+      outFile << " 3 P 1.0" << endl;
+      for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
+      {
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionP(basis.GetPtr(basis.GetShell(i))) << endl;
+      }
+    }
+    else if ( basis.GetLabel(i) == 255 )
+    {
+      outFile << " 5 D 1.0" << endl;
+      for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
+      {
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionD(basis.GetPtr(basis.GetShell(i))) << endl;
+      }
+    }
+    else if ( basis.GetLabel(i) == 351 )
+    {
+      outFile << " 7 F 1.0" << endl;
+      for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
+      {
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionF(basis.GetPtr(basis.GetShell(i))) << endl;
+      }
+    }
+    else if ( basis.GetLabel(i) == 451 )
+    {
+      outFile << " 9 G 1.0" << endl;
+      for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
+      {
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionG(basis.GetPtr(basis.GetShell(i))) << endl;
+      }
+    }
+    else if ( basis.GetLabel(i) == 551 )
+    {
+      outFile << "11 H 1.0" << endl;
+      for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
+      {
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionH(basis.GetPtr(basis.GetShell(i))) << endl;
+      }
+    }
+  }
+  outFile << "$END" << endl << endl;
+}
+
+/*
+  The main ReadWriteBasis function simply reads the .47 file
   into a BasisSet object and then calls a function
   to write it to the output file
 */
@@ -97,11 +396,21 @@ void ReadWriteBasis ( char* base, ofstream & outFile,
                       BasisSet & basis )
 {
   string ifile(base);
-  ifile = ifile+".31";
+  ifile = ifile+".47";
   ifstream inFile(ifile.c_str());
   ReadBasis(inFile,geom,basis);
   WriteBasis(outFile,geom,basis);
   inFile.close();
+}
+
+/*
+This is the routine to read the orbital coefficients
+and write them to the mkl file
+*/
+
+void ReadWriteOrbitals(argv[1],outFile,geom,basis)
+{
+
 }
 
 /*
@@ -125,9 +434,8 @@ Calling:
 nbo2mkl BASE EXT charge multiplicity
   - Here BASE is the base of the relevant files.
   - It is required that there be the following present:
-    1. BASE.31
-    2. BASE.EXT
-    3. BASE.47
+    1. BASE.EXT
+    2. BASE.47
   - EXT is the extension of the relevant orbital file.
     - By default, GENNBO uses 37 for NBO and 39
       for NLMOs
@@ -141,10 +449,10 @@ nbo2mkl BASE EXT charge multiplicity
 Currently, the MKL file ONLY  contains the coordinates,
 charge, multiplicity, basis set, and MO coefficients.
 
-Further, it doesn't generate beta MO coefficients.
-
 Also, it doesn't include symmetry labels or orbital
 energies
+
+Also, it doesn't contain ECP support.
 
 The inclusion of the above along with occupancies is planned
 for future development.
@@ -169,4 +477,5 @@ int main ( int argc, char* argv[] )
   ReadWriteGeom(argv[1],outFile,geom);
   ReadWriteBasis(argv[1],outFile,geom,basis);
   ReadWriteOrbitals(argv[1],outFile,geom,basis);
+  outFile.close();
 }

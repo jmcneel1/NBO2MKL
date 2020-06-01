@@ -24,7 +24,7 @@ void WriteHeader ( ofstream & outFile )
   outFile << "#" << endl;
   outFile << "# MKL format from an NBO Plot File" << endl;
   outFile << "#" << endl;
-} 
+}
 
 void ReadWriteGeom ( char* base, ofstream & outFile, unsigned int & numatom )
 {
@@ -112,7 +112,7 @@ void ReadWriteBasis ( char* base, ofstream & outFile, unsigned int natom,
     shell.push_back(label/100);
     if ( maxshell < label/100 ) maxshell = label/100;
     if ( label == 1 ) labels.push_back(1);
-    else if ( label == 103 ) 
+    else if ( label == 103 )
     {
       labels.push_back(103); labels.push_back(101); labels.push_back(102);
     }
@@ -139,7 +139,7 @@ void ReadWriteBasis ( char* base, ofstream & outFile, unsigned int natom,
       labels.push_back(554); labels.push_back(555); labels.push_back(556);
       labels.push_back(557); labels.push_back(558); labels.push_back(559);
       labels.push_back(560); labels.push_back(561);
-    } 
+    }
     getline(inFile,line);
   }
   for ( unsigned int i = 0; i < numprim/4; i++ )
@@ -283,7 +283,7 @@ void ReadWriteOrbitals ( char* base, ofstream & outFile, unsigned int natom,
   {
     for ( unsigned int j = 0; j < nbasis; j++ )
     {
- 
+
       double temp;
       inFile >> temp;
       if ( labels.at(j) == 357 ) temp*=-1;

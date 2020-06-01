@@ -1,0 +1,142 @@
+
+ *********************************** NBO 5.0 ***********************************
+             N A T U R A L   A T O M I C   O R B I T A L   A N D
+          N A T U R A L   B O N D   O R B I T A L   A N A L Y S I S
+ *******************************************************************************
+  (c) Copyright 1996-2001 Board of Regents of the University of Wisconsin System
+      on behalf of the Theoretical Chemistry Institute.  All Rights Reserved.
+
+          Cite this program as:
+
+          NBO 5.0.  E. D. Glendening, J. K. Badenhoop, A. E. Reed,
+          J. E. Carpenter, J. A. Bohmann, C. M. Morales, and F. Weinhold
+          (Theoretical Chemistry Institute, University of Wisconsin,
+          Madison, WI, 2001)
+
+       /PLOT   / : Write information for the orbital plotter
+
+ Job title:  Title                                                          
+
+ Storage needed:          32 in NPA,          37 in NBO,
+                          32 in NLMO (    10000000 available)
+
+
+ NATURAL POPULATIONS:  Natural atomic orbital occupancies 
+                                                          
+  NAO Atom No lang   Type(AO)    Occupancy      Energy    
+ ---------------------------------------------------------
+   1    H  1  s      Val( 1s)     1.00000       0.02906
+ 
+   2    H  2  s      Val( 1s)     1.00000       0.02906
+
+
+ Summary of Natural Population Analysis:
+
+                                     Natural Population
+             Natural    ---------------------------------------------
+  Atom No    Charge        Core      Valence    Rydberg      Total
+ --------------------------------------------------------------------
+    H  1    0.00000      0.00000     1.00000    0.00000     1.00000
+    H  2    0.00000      0.00000     1.00000    0.00000     1.00000
+ ====================================================================
+ * Total *  0.00000      0.00000     2.00000    0.00000     2.00000
+
+                                 Natural Population      
+ --------------------------------------------------------
+   Valence                    2.00000 (100.0000% of   2)
+   Natural Minimal Basis      2.00000 (100.0000% of   2)
+   Natural Rydberg Basis      0.00000 (  0.0000% of   2)
+ --------------------------------------------------------
+
+    Atom No         Natural Electron Configuration
+ ----------------------------------------------------------------------------
+      H  1            1s( 1.00)
+      H  2            1s( 1.00)
+
+
+ NATURAL BOND ORBITAL ANALYSIS:
+
+                       Occupancies       Lewis Structure    Low   High
+           Occ.    -------------------  -----------------   occ   occ
+  Cycle   Thresh.   Lewis   Non-Lewis     CR  BD  3C  LP    (L)   (NL)   Dev
+ =============================================================================
+   1(1)    1.90     2.00000   0.00000      0   1   0   0     0      0    0.00
+ -----------------------------------------------------------------------------
+
+ Structure accepted: No low occupancy Lewis orbitals
+
+ --------------------------------------------------------
+   Valence Lewis             2.00000 (100.000% of   2)
+  ==================       ============================
+   Total Lewis               2.00000 (100.000% of   2)
+  -----------------------------------------------------
+   Valence non-Lewis         0.00000 (  0.000% of   2)
+   Rydberg non-Lewis         0.00000 (  0.000% of   2)
+  ==================       ============================
+   Total non-Lewis           0.00000 (  0.000% of   2)
+ --------------------------------------------------------
+
+
+     (Occupancy)   Bond orbital/ Coefficients/ Hybrids
+ -------------------------------------------------------------------------------
+   1. (2.00000) BD ( 1) H 1- H 2      
+                ( 50.00%)   0.7071* H 1 s(100.00%)
+                                         1.0000
+                ( 50.00%)   0.7071* H 2 s(100.00%)
+                                         1.0000
+   2. (0.00000) BD*( 1) H 1- H 2      
+                ( 50.00%)   0.7071* H 1 s(100.00%)
+                ( 50.00%)  -0.7071* H 2 s(100.00%)
+
+
+ NHO DIRECTIONALITY AND BOND BENDING (deviations from line of nuclear centers)
+
+         [Thresholds for printing:  angular deviation  >  1.0 degree]
+                                    p- or d-character  > 25.0%
+                                    orbital occupancy  >  0.10e
+
+                       Line of Centers        Hybrid 1              Hybrid 2
+                       ---------------  -------------------   ------------------
+           NBO           Theta   Phi    Theta   Phi    Dev    Theta   Phi    Dev
+ ===============================================================================
+    None exceeding thresholds
+
+
+ SECOND ORDER PERTURBATION THEORY ANALYSIS OF FOCK MATRIX IN NBO BASIS
+
+     Threshold for printing:   0.50 kcal/mol
+                                                          E(2)  E(j)-E(i) F(i,j)
+      Donor NBO (i)              Acceptor NBO (j)       kcal/mol   a.u.    a.u. 
+ ===============================================================================
+
+ within unit  1
+       None above threshold
+
+
+ NATURAL BOND ORBITALS (Summary):
+
+                                                     Principal Delocalizations
+           NBO              Occupancy    Energy      (geminal,vicinal,remote)
+ ===============================================================================
+ Molecular unit  1  (H2)
+   1. BD ( 1) H 1- H 2       2.00000    -0.55450
+   2. BD*( 1) H 1- H 2       0.00000     0.61262
+       -------------------------------
+              Total Lewis    2.00000  (100.0000%)
+        Valence non-Lewis    0.00000  (  0.0000%)
+        Rydberg non-Lewis    0.00000  (  0.0000%)
+       -------------------------------
+            Total unit  1    2.00000  (100.0000%)
+           Charge unit  1    0.00000
+
+
+ NATURAL LOCALIZED MOLECULAR ORBITAL (NLMO) ANALYSIS:
+
+ Maximum off-diagonal element of DM in NLMO basis:  0.00000D+00
+
+ Hybridization/Polarization Analysis of NLMOs in NAO Basis:
+ NLMO/Occupancy/Percent from Parent NBO/ Atomic Hybrid Contributions
+ -------------------------------------------------------------------------------
+   1. (2.00000) 100.0000%  BD ( 1) H 1- H 2      
+                           50.000%  H 1 s(100.00%)
+                           50.000%  H 2 s(100.00%)
