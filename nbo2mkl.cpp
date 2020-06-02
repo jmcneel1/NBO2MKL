@@ -1,4 +1,5 @@
 #include "BasisSet.h"
+#include "Atom.h"
 #include <sstream>
 #include <iomanip>
 #include <cmath>
@@ -50,7 +51,7 @@ void ReadWriteGeom ( char* base, ofstream & outFile,
   // The GoTo mautil function, then read 2 more lines
   GoTo(inFile,"$COORD");
   getline(inFile,line); getline(inFile,line);
-  while ( line.find("---") == string::npos )
+  while ( line.find("$END") == string::npos )
   {
     unsigned int atnum, wt;
     float x, y, z;
@@ -88,7 +89,7 @@ unsigned int ReadNBAS ( ifstream & inFile )
     inFile >> temp;
   }
   size_t pos = temp.find("=");
-  return atoi(temp.substr(pos+1));
+  return atoi(temp.substr(pos++).c_str());
 }
 
 /*
@@ -117,7 +118,7 @@ max angular momentum
 */
 
 void ReadLabels ( ifstream & inFile, vector<unsigned int> & labels,
-                  unsigned int & maxlabel)
+                  unsigned int & maxlabel, unsigned int nbas )
 {
   unsigned int label;
   maxlabel = 0; // Just in case...
@@ -148,9 +149,9 @@ void AssignShells ( vector<unsigned int> & shell,
   unsigned int currentshell(-1);
   for ( unsigned int i = 0; i < labels.size(); i++ )
   {
-    if ( label.at(i) == 1 || label.at(i) == 103 ||
-         label.at(i) == 255 || label.at(i) == 351 ||
-         label.at(i) == 451 || label.at(i) == 551 ) currentshell++;
+    if ( labels.at(i) == 1 || labels.at(i) == 103 ||
+         labels.at(i) == 255 || labels.at(i) == 351 ||
+         labels.at(i) == 451 || labels.at(i) == 551 ) currentshell++;
     shell.at(i) = currentshell;
   }
 }
@@ -185,6 +186,7 @@ Here we read the number of primitives of the shells
 void ReadNPrim ( ifstream & inFile, vector<unsigned int> & nprim )
 {
   // First we skip the NCOMP line
+  string line;
   getline(inFile,line);
   unsigned int temp;
   string t1, t2;
@@ -225,7 +227,7 @@ void ReadExp ( ifstream & inFile,
   double temp;
   // Should be t1 == EXP, t2 == =
   inFile >> t1 >> t2;
-  for ( unsigned int i = 0; i < nexp, i++ )
+  for ( unsigned int i = 0; i < nexp; i++ )
   {
     inFile >> temp;
     exps.at(i) = temp;
@@ -296,7 +298,7 @@ void ReadBasis ( ifstream & inFile,
   ReadCenters(inFile,centers,nbas);
   unsigned int maxL; // Stores the highest L
   vector<unsigned int> labels(nbas); // length of nbasis
-  ReadLabels(inFile,labels,maxlabel);
+  ReadLabels(inFile,labels,maxL,nbas);
   vector<unsigned int> shell(nbas);
   AssignShells(shell,labels);
   unsigned int nshell, nexp;
@@ -313,7 +315,7 @@ void ReadBasis ( ifstream & inFile,
   {
     ReadShellCoeff(inFile,coeffs,nexp);
   }
-  SetBasisSetObject(basis,exps,coeffs,centers,labels,shell,nprim);
+  SetBasisSetObject(basis,exps,coeffs,centers,labels,shell,ptr,nprim);
 }
 
 /*
@@ -414,6 +416,84 @@ But they print out z, x, y, and that is how they are stored in NBO
 Thus we have z + 2, x -1
 */
 
+void ReadOrbs ( ifstream & inFile,
+                vector< vector<double> >  & orbs,
+                const BasisSet & basis)
+{
+  // First we skip the first three lines
+  string line;
+  for ( unsigned int i = 0; i < 3; i++ ) getline(inFile,line);
+  // Now define the temp double variable
+  double temp;
+  // Now we read the coefficients and alter relevant ones
+  // based on the associated labels
+  for ( unsigned int i = 0; i < basis.GetNBasis(); i++ )
+  {
+    for ( unsigned int j = 0; i < basis.GetNBasis(); j++ )
+    {
+      inFile >> temp;
+      if ( basis.GetLabel(j) == 357 ) temp*=-1;
+      if ( basis.GetLabel(j) == 356 ) temp*=-1;
+      if ( basis.GetLabel(j) == 456 ) temp*=-1;
+      if ( basis.GetLabel(j) == 457 ) temp*=-1;
+      if ( basis.GetLabel(j) == 458 ) temp*=-1;
+      if ( basis.GetLabel(j) == 459 ) temp*=-1;
+      if ( basis.GetLabel(j) == 101 ) orbs.at(i).at(j-1) = temp;
+      else if ( basis.GetLabel(j) == 102 ) orbs.at(i).at(j-1) = temp;
+      else if ( basis.GetLabel(j) == 103 ) orbs.at(i).at(j+2) = temp;
+      else orbs.at(i).at(j) = temp;
+    }
+  }
+}
+
+/*
+And finally we write the orbitals to the mkl file
+*/
+
+void WriteOrbs ( ofstream & outFile, vector< vector<double > > & orbs,
+                 unsigned int nbasis )
+{
+  // First the header line
+  outFile << "$COEFF_ALPHA" << endl;
+  // The first loop goes over the 'full' rows ( 5 columns )
+  for ( unsigned int i = 0; i < nbasis/5; i++ )
+  {
+    // this might be sloppy ... but it works ... the formatting that is
+    outFile << " ";
+    for ( unsigned int j = 0; j < 5; j++ ) outFile << "a1g  ";
+    outFile << endl;
+    // Here we set each orbital as having 0 hartree energy
+    for ( unsigned int j = 0; j < 5; j++ ) outFile << setw(13) << fixed << setprecision(7) << 0.0 << " ";
+    outFile << " " << endl;
+    for ( unsigned int j = 0; j < nbasis; j++ )
+    {
+      outFile << setw(12) << fixed << setprecision(7) << orbs.at(i*5).at(j);
+      outFile << setw(13) << fixed << setprecision(7) << orbs.at(i*5+1).at(j);
+      outFile << setw(13) << fixed << setprecision(7) << orbs.at(i*5+2).at(j);
+      outFile << setw(13) << fixed << setprecision(7) << orbs.at(i*5+3).at(j);
+      outFile << setw(13) << fixed << setprecision(7) << orbs.at(i*5+4).at(j);
+      outFile << " " << endl;
+    }
+  }
+  if ( nbasis%5 != 0 )
+  {
+    outFile << " ";
+    for ( unsigned int i = 0; i < nbasis%5; i++ ) outFile << "a1g  ";
+    outFile << endl;
+    for ( unsigned int i = 0; i < nbasis%5; i++ ) outFile << setw(13) << fixed << setprecision(7) << 0.0 << " ";
+    outFile << " " << endl;
+    for ( unsigned int i = 0; i < nbasis; i++ )
+    {
+      outFile << setw(12) << fixed << setprecision(7) << orbs.at((nbasis/5)*5).at(i);
+      for ( unsigned int j = 1; j < nbasis%5; j++ )
+      {
+        outFile << setw(13) << fixed << setprecision(7) << orbs.at((nbasis/5)*5+j).at(i);
+      }
+    }
+  }
+  outFile << " $END" << endl;
+}
+
 /*
 This is the routine to read the orbital coefficients
 and write them to the mkl file
@@ -430,6 +510,7 @@ void ReadWriteOrbitals ( char* base, ofstream & outFile,
   vector< vector<double> > orbs(basis.GetNBasis(), vector<double> (basis.GetNBasis(),0.0));
   ReadOrbs(inFile,orbs,basis);
   WriteOrbs(outFile,orbs,basis.GetNBasis());
+  inFile.close();
 }
 
 /*
@@ -487,7 +568,7 @@ int main ( int argc, char* argv[] )
     exit(1);
   }
   BasisSet basis;
-  vector<Atom> & geom;
+  vector<Atom> geom;
   string ofile(argv[1]);
   ofile = ofile + ".mkl";
   ofstream outFile(ofile.c_str());

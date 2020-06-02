@@ -1,0 +1,18 @@
+$MKL
+#
+# MKL format from an NBO Plot File
+#
+$CHAR_MULT
+  0 1
+$END
+
+$COORD
+   1    0.000000   0.000000   0.000000
+   1    0.000000   0.000000   0.800000
+$END
+
+$BASIS
+$END
+
+$COEFF_ALPHA
+ $END
