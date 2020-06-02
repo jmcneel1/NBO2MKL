@@ -276,7 +276,7 @@ void BasisSet::AddSShell ( unsigned int center, const vector<double> & exps,
   else { myPtr.push_back(myPtr.at(myNshell-2) + myNprim.at(myNshell-2)); }
   myNprim.push_back(coeffs.size());
   myNexp+=coeffs.size();
-  if ( abs( NormContracted(0,coeffs,exps) - 1 ) < 0.001 )
+  if ( fabs( NormContracted(0,coeffs,exps) - 1 ) < 0.001 )
   {
     for ( unsigned int i = 0; i < exps.size(); i++ )
     {
@@ -326,7 +326,7 @@ void BasisSet::AddPShell ( unsigned int center, const vector<double> & exps,
   else { myPtr.push_back(myPtr.at(myNshell-2) + myNprim.at(myNshell-2)); }
   myNprim.push_back(coeffs.size());
   myNexp+=coeffs.size();
-  if ( abs( NormContracted(1,coeffs,exps) - 1 ) < 0.001 )
+  if ( fabs( NormContracted(1,coeffs,exps) - 1 ) < 0.001 )
   {
     for ( unsigned int i = 0; i < exps.size(); i++ )
     {
@@ -376,7 +376,7 @@ void BasisSet::AddDShell ( unsigned int center, const vector<double> & exps,
   else { myPtr.push_back(myPtr.at(myNshell-2) + myNprim.at(myNshell-2)); }
   myNprim.push_back(coeffs.size());
   myNexp+=coeffs.size();
-  if ( abs( NormContracted(2,coeffs,exps) - 1 ) < 0.001 )
+  if ( fabs( NormContracted(2,coeffs,exps) - 1 ) < 0.001 )
   {
     for ( unsigned int i = 0; i < exps.size(); i++ )
     {
@@ -426,7 +426,7 @@ void BasisSet::AddFShell ( unsigned int center, const vector<double> & exps,
   else { myPtr.push_back(myPtr.at(myNshell-2) + myNprim.at(myNshell-2)); }
   myNprim.push_back(coeffs.size());
   myNexp+=coeffs.size();
-  if ( abs( NormContracted(3,coeffs,exps) - 1 ) < 0.001 )
+  if ( fabs( NormContracted(3,coeffs,exps) - 1 ) < 0.001 )
   {
     for ( unsigned int i = 0; i < exps.size(); i++ )
     {
@@ -476,7 +476,7 @@ void BasisSet::AddGShell ( unsigned int center, const vector<double> & exps,
   else { myPtr.push_back(myPtr.at(myNshell-2) + myNprim.at(myNshell-2)); }
   myNprim.push_back(coeffs.size());
   myNexp+=coeffs.size();
-  if ( abs( NormContracted(4,coeffs,exps) - 1 ) < 0.001 )
+  if ( fabs( NormContracted(4,coeffs,exps) - 1 ) < 0.001 )
   {
     for ( unsigned int i = 0; i < exps.size(); i++ )
     {
@@ -529,7 +529,7 @@ void BasisSet::AddHShell ( unsigned int center, const vector<double> & exps,
   }
   myNprim.push_back(coeffs.size());
   myNexp+=coeffs.size();
-  if ( abs( NormContracted(5,coeffs,exps) - 1 ) < 0.001 )
+  if ( fabs( NormContracted(5,coeffs,exps) - 1 ) < 0.001 )
   {
     for ( unsigned int i = 0; i < exps.size(); i++ )
     {

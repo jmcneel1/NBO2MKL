@@ -89,7 +89,8 @@ unsigned int ReadNBAS ( ifstream & inFile )
     inFile >> temp;
   }
   size_t pos = temp.find("=");
-  return atoi(temp.substr(pos++).c_str());
+  pos++;
+  return atoi(temp.substr(pos).c_str());
 }
 
 /*
@@ -129,6 +130,7 @@ void ReadLabels ( ifstream & inFile, vector<unsigned int> & labels,
   {
     inFile >> label;
     if ( label/100 > maxlabel ) maxlabel = label/100;
+    labels.at(i) = label;
   }
 }
 
@@ -185,11 +187,12 @@ Here we read the number of primitives of the shells
 
 void ReadNPrim ( ifstream & inFile, vector<unsigned int> & nprim )
 {
-  // First we skip the NCOMP line
-  string line;
-  getline(inFile,line);
   unsigned int temp;
   string t1, t2;
+  // First we skip the NCOMP entries
+  inFile >> t1 >> t2;
+  for ( unsigned int i = 0; i < nprim.size(); i++ ) inFile >> temp;
+  // Now we get there...
   inFile >> t1 >> t2;
   for ( unsigned int i = 0; i < nprim.size(); i++ )
   {
@@ -222,7 +225,6 @@ Now we actually read the exponents
 void ReadExp ( ifstream & inFile,
                vector<double> & exps, unsigned int nexp)
 {
-  GoTo(inFile,"NPTR");
   string t1, t2;
   double temp;
   // Should be t1 == EXP, t2 == =
@@ -250,7 +252,7 @@ void ReadShellCoeff ( ifstream & inFile,
   for ( unsigned int i = 0; i < nexp; i++ )
   {
     inFile >> temp;
-    if ( abs(coeffs.at(i)) < abs(temp) ) coeffs.at(i) = temp;
+    if ( fabs(coeffs.at(i)) < fabs(temp) ) coeffs.at(i) = temp;
   }
 }
 
@@ -334,8 +336,8 @@ void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
       outFile << " 1 S 1.0" << endl;
       for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
       {
-        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
-        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionS(basis.GetPtr(basis.GetShell(i))) << endl;
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i))+j);
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionS(basis.GetPtr(basis.GetShell(i))+j) << endl;
       }
     }
     else if ( basis.GetLabel(i) == 103 )
@@ -343,8 +345,8 @@ void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
       outFile << " 3 P 1.0" << endl;
       for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
       {
-        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
-        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionP(basis.GetPtr(basis.GetShell(i))) << endl;
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i))+j);
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionP(basis.GetPtr(basis.GetShell(i))+j) << endl;
       }
     }
     else if ( basis.GetLabel(i) == 255 )
@@ -352,8 +354,8 @@ void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
       outFile << " 5 D 1.0" << endl;
       for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
       {
-        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
-        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionD(basis.GetPtr(basis.GetShell(i))) << endl;
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i))+j);
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionD(basis.GetPtr(basis.GetShell(i))+j) << endl;
       }
     }
     else if ( basis.GetLabel(i) == 351 )
@@ -361,8 +363,8 @@ void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
       outFile << " 7 F 1.0" << endl;
       for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
       {
-        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
-        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionF(basis.GetPtr(basis.GetShell(i))) << endl;
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i))+j);
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionF(basis.GetPtr(basis.GetShell(i))+j) << endl;
       }
     }
     else if ( basis.GetLabel(i) == 451 )
@@ -370,8 +372,8 @@ void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
       outFile << " 9 G 1.0" << endl;
       for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
       {
-        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
-        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionG(basis.GetPtr(basis.GetShell(i))) << endl;
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i))+j);
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionG(basis.GetPtr(basis.GetShell(i))+j) << endl;
       }
     }
     else if ( basis.GetLabel(i) == 551 )
@@ -379,8 +381,8 @@ void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
       outFile << "11 H 1.0" << endl;
       for ( unsigned int j = 0; j < basis.GetNumPrim(basis.GetShell(i)); j++ )
       {
-        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i)));
-        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionH(basis.GetPtr(basis.GetShell(i))) << endl;
+        outFile << setw(19) << fixed << setprecision(9) << basis.GetExponent(basis.GetPtr(basis.GetShell(i))+j);
+        outFile << setw(17) << fixed << setprecision(9) << basis.GetNormContractionH(basis.GetPtr(basis.GetShell(i))+j) << endl;
       }
     }
   }
@@ -429,7 +431,7 @@ void ReadOrbs ( ifstream & inFile,
   // based on the associated labels
   for ( unsigned int i = 0; i < basis.GetNBasis(); i++ )
   {
-    for ( unsigned int j = 0; i < basis.GetNBasis(); j++ )
+    for ( unsigned int j = 0; j < basis.GetNBasis(); j++ )
     {
       inFile >> temp;
       if ( basis.GetLabel(j) == 357 ) temp*=-1;
@@ -489,6 +491,7 @@ void WriteOrbs ( ofstream & outFile, vector< vector<double > > & orbs,
       {
         outFile << setw(13) << fixed << setprecision(7) << orbs.at((nbasis/5)*5+j).at(i);
       }
+      outFile << endl;
     }
   }
   outFile << " $END" << endl;
