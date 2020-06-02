@@ -404,13 +404,32 @@ void ReadWriteBasis ( char* base, ofstream & outFile,
 }
 
 /*
+This routine actually reads the orbitals from the relevant file.
+We then back-convert a few of the coefficients for compatibility
+with ORCA
+Namely -- we rearrange the order of p-orbitals and we
+alter the sign of a couple of coefficients.
+Remember ... ORCA wants the MKL file to contain x, y, z
+But they print out z, x, y, and that is how they are stored in NBO
+Thus we have z + 2, x -1
+*/
+
+/*
 This is the routine to read the orbital coefficients
 and write them to the mkl file
 */
 
-void ReadWriteOrbitals(argv[1],outFile,geom,basis)
+void ReadWriteOrbitals ( char* base, ofstream & outFile,
+                        const vector<Atom> & geom,
+                        const BasisSet & basis,
+                        char* ext )
 {
-
+  string ifile(base), ifileext(ext), line;
+  ifile = ifile+"."+ifileext;
+  ifstream inFile(ifile);
+  vector< vector<double> > orbs(basis.GetNBasis(), vector<double> (basis.GetNBasis(),0.0));
+  ReadOrbs(inFile,orbs,basis);
+  WriteOrbs(outFile,orbs,basis.GetNBasis());
 }
 
 /*
@@ -476,6 +495,6 @@ int main ( int argc, char* argv[] )
   WriteChargeMult(outFile,argv[2],argv[3]);
   ReadWriteGeom(argv[1],outFile,geom);
   ReadWriteBasis(argv[1],outFile,geom,basis);
-  ReadWriteOrbitals(argv[1],outFile,geom,basis);
+  ReadWriteOrbitals(argv[1],outFile,geom,basis,argv[4]);
   outFile.close();
 }
