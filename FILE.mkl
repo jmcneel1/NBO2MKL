@@ -1,0 +1,9 @@
+$MKL
+#
+# MKL format from an NBO Plot File
+#
+$CHAR_MULT
+  0 1
+$END
+
+$COORD
