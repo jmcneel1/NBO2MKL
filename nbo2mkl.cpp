@@ -34,7 +34,7 @@ void WriteChargeMult ( ofstream & outFile, char* charge, char* mult )
 }
 
 /*
-This reads the .31 file for the coordinates
+This reads the .47 file for the coordinates
 It assumes that they are in Angstroems
 It then write them into the output file (.mkl)
 and saves the geometry to a vector
@@ -328,9 +328,15 @@ We only write based on the label == 1, 103, 255, 351, 451, 551
 void WriteBasis ( ofstream & outFile, const vector<Atom> & geom,
                   const BasisSet & basis )
 {
+  unsigned int crt_center = basis.GetCenter(0);
   outFile << "$BASIS" << endl;
   for ( unsigned int i = 0; i < basis.GetNBasis(); i++ )
   {
+    if ( basis.GetCenter(i) != crt_center )
+    {
+      crt_center = basis.GetCenter(i);
+      outFile << "$$\n";
+    }
     if ( basis.GetLabel(i) == 1 )
     {
       outFile << " 1 S 1.0" << endl;
